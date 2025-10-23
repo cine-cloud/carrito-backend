@@ -1,5 +1,6 @@
 package com.unrn.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter; 
 import lombok.Setter; 
@@ -18,6 +19,7 @@ public class CarritoItem {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="carrito_id", nullable=false)
+  @JsonIgnore
   private Carrito carrito;
 
   @Column(name="pelicula_id", nullable=false)

@@ -3,7 +3,6 @@ package com.unrn.services;
 import com.unrn.model.*;
 import com.unrn.repository.*;
 import com.unrn.services.Externo.*;
-import com.unrn.services.mensajeria.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -14,10 +13,10 @@ public class CarritoServicio {
 
   private final CarritoRepositorio repo;
   private final ClientePeliculas clientePeliculas;
-  private final MensajeriaStock mensajeria;
 
-  public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas, MensajeriaStock mensajeria) {
-    this.repo = repo; this.clientePeliculas = clientePeliculas; this.mensajeria = mensajeria;
+  public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas) {
+    this.repo = repo; 
+    this.clientePeliculas = clientePeliculas;
   }
 
   public Carrito crear(String usuarioId) {
@@ -59,26 +58,12 @@ public class CarritoServicio {
   public Carrito checkout(String carritoId) {
     Carrito c = obtener(carritoId);
     if (c.getItems().isEmpty()) throw new IllegalStateException("Carrito vacío");
-    c.setEstado(CarritoEstado.PENDIENTE_STOCK);
-    repo.save(c);
-    mensajeria.solicitarReserva(c);
-    return c;
+    c.setEstado(CarritoEstado.CONFIRMADO);
+    return repo.save(c);
   }
 
-  public Carrito obtener(String id) {
-    return repo.findById(id).orElseThrow();
-  }
-
-  // llamados por el listener AMQP
-  public void onStockReservado(String carritoId) {
-    Carrito c = obtener(carritoId);
-    c.setEstado(CarritoEstado.STOCK_RESERVADO);
-    repo.save(c);
-  }
-  public void onStockRechazado(String carritoId, String motivo) {
-    Carrito c = obtener(carritoId);
-    c.setEstado(CarritoEstado.ABIERTO); // o CANCELADO según negocio
-    repo.save(c);
+  public Carrito obtener(String idCarrito) {
+    return repo.findById(idCarrito).orElseThrow();
   }
 
   private void asegurarEditable(Carrito c) {

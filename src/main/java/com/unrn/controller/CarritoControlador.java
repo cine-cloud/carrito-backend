@@ -13,31 +13,19 @@ public class CarritoControlador {
   private final CarritoServicio servicio;
   public CarritoControlador(CarritoServicio servicio) { this.servicio = servicio; }
 
-  @PostMapping
-  public Carrito crear(@RequestHeader("X-Usuario-Id") String usuarioId) {
+  @PostMapping("/crear-carrito/{usuarioId}")
+  public Carrito crearCarrito(@PathVariable String usuarioId) {
     return servicio.crear(usuarioId);
   }
 
-  @GetMapping("/{id}")
-  public Carrito obtener(@PathVariable String id) { return servicio.obtener(id); }
+  @GetMapping("/obtener-carrito/{idCarrito}")
+  public Carrito obtenerCarrito(@PathVariable String idCarrito) 
+    { return servicio.obtener(idCarrito); }
 
-  @PostMapping("/{id}/items")
-  public Carrito agregarItem(@PathVariable String id, @Valid @RequestBody AgregarItemDTO dto) {
-    return servicio.agregarItem(id, dto.peliculaId(), dto.cantidad());
+  @PostMapping("/agregar-item/{idCarrito}")
+  public Carrito agregarItemCarrito(@PathVariable String idCarrito, @Valid @RequestBody AgregarItemDTO dto) {
+    return servicio.agregarItem(idCarrito, dto.peliculaId(), dto.cantidad());
   }
-
-  @PatchMapping("/{id}/items/{peliculaId}")
-  public Carrito actualizar(@PathVariable String id, @PathVariable Integer peliculaId,
-                            @Valid @RequestBody ActualizarCantidadDTO dto) {
-    return servicio.actualizarCantidad(id, peliculaId, dto.cantidad());
-  }
-
-  @DeleteMapping("/{id}/items/{peliculaId}")
-  public Carrito eliminar(@PathVariable String id, @PathVariable Integer peliculaId) {
-    return servicio.eliminarItem(id, peliculaId);
-  }
-
-  @PostMapping("/{id}/checkout")
-  public Carrito checkout(@PathVariable String id) { return servicio.checkout(id); }
+ 
 }
 

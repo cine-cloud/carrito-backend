@@ -17,7 +17,7 @@ public class ClientePeliculas {
   }
 
   public PeliculaRemota obtenerPorId(Integer id) {
-    var resp = rest.getForEntity(baseUrl + "/peliculas/{id}", PeliculaRemota.class, id);
+    var resp = rest.getForEntity(baseUrl + "/api/peliculas/{id}", PeliculaRemota.class, id);
     if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody()==null) {
       throw new IllegalStateException("No se pudo obtener Película " + id);
     }
