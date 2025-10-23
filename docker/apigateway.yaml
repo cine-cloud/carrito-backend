@@ -1,7 +1,7 @@
 name: cloudpelicula
 services:
   gateway:
-    image: hmunoz79/apigateway:1.5
+    image: almacenpelicula/apigateway:1.5
     extra_hosts:
       - "host.docker.internal:${HOST_IP}"
     ports:
