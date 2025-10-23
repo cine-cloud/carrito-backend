@@ -40,6 +40,13 @@
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
     </dependency>
+
+    <!-- Conexion Rabbit -->       
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-amqp</artifactId>
+    </dependency>
+
     <!-- Base de datos H2 solo para pruebas -->
     <dependency>
       <groupId>com.h2database</groupId>
