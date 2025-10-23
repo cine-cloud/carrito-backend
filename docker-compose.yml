@@ -1,36 +1,31 @@
 services:
-  peliculas-app:
-    build: ../peliculas-backend
-    ports: ["8080:8080"]
+  gateway:
+    image: hmunoz79/apigateway:1.5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9500:9500"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://peliculas-db:5432/peliculas_db
-      SPRING_DATASOURCE_USERNAME: user_peliculas
-      SPRING_DATASOURCE_PASSWORD: pass_peliculas    
+      SPRING_SERVER_PORT: 9500
+      SPRING_CLOUD_GATEWAY_ROUTES[0]_URI: http://carritos-app:8081
+      SPRING_CLOUD_GATEWAY_ROUTES[0]_ID: carrito-service
+      SPRING_CLOUD_GATEWAY_ROUTES[0]_PREDICATES[0]: Path=/carritos/**
     depends_on:
-      - peliculas-db
-      
-
-  peliculas-db:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: peliculas_db
-      POSTGRES_USER: user_peliculas
-      POSTGRES_PASSWORD: pass_peliculas
-    volumes:
-      - peliculas-data:/var/lib/postgresql/data
+      - carritos-app
 
   carritos-app:
     build: .
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports: ["8081:8081"]
     environment:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://carritos-db:5432/carritos_db
       SPRING_DATASOURCE_USERNAME: user_carritos
       SPRING_DATASOURCE_PASSWORD: pass_carritos    
-      PELICULAS_BASE_URL: http://peliculas-app:8080
+      PELICULAS_BASE_URL: http://host.docker.internal:8080
     depends_on:
       - carritos-db
-      - peliculas-app
 
   carritos-db:
     image: postgres:16
@@ -41,8 +36,5 @@ services:
     volumes:
       - carritos-data:/var/lib/postgresql/data
 
- 
-
 volumes:
-  peliculas-data:
   carritos-data:
