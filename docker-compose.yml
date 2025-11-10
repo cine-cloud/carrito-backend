@@ -22,13 +22,14 @@ services:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://carritos-db:5432/carritos_db
       SPRING_DATASOURCE_USERNAME: user_carritos
-      SPRING_DATASOURCE_PASSWORD: pass_carritos    
+      SPRING_DATASOURCE_PASSWORD: pass_carritos
       PELICULAS_BASE_URL: http://host.docker.internal:8080
     depends_on:
       - carritos-db
 
   carritos-db:
-    image: postgres:16
+    image: postgres:13-alpine
+    container_name: carritos-db-container
     environment:
       POSTGRES_DB: carritos_db
       POSTGRES_USER: user_carritos

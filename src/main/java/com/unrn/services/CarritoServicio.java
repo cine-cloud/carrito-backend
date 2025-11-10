@@ -66,6 +66,32 @@ public class CarritoServicio {
     return repo.findById(idCarrito).orElseThrow();
   }
 
+  public void eliminar(String carritoId) {
+    Carrito c = obtener(carritoId);
+    if (c.getEstado() == CarritoEstado.CONFIRMADO) {
+      throw new IllegalStateException("No se puede eliminar un carrito confirmado");
+    }
+    repo.delete(c);
+  }
+
+  public Carrito vaciar(String carritoId) {
+    Carrito c = obtener(carritoId);
+    asegurarEditable(c);
+    c.getItems().clear();
+    c.recalcular();
+    return repo.save(c);
+  }
+
+  public Carrito cancelar(String carritoId) {
+    Carrito c = obtener(carritoId);
+    c.setEstado(CarritoEstado.CANCELADO);
+    return repo.save(c);
+  }
+
+  public java.util.List<Carrito> listarPorUsuario(String usuarioId) {
+    return repo.findByUsuarioId(usuarioId);
+  }
+
   private void asegurarEditable(Carrito c) {
     if (c.getEstado() != CarritoEstado.ABIERTO)
       throw new IllegalStateException("El carrito no es editable en estado " + c.getEstado());
