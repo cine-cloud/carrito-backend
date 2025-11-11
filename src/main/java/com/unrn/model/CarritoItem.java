@@ -1,6 +1,7 @@
 package com.unrn.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter; 
 import lombok.Setter; 
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 @Entity @Table(name = "carrito_items")
 @Getter @Setter @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CarritoItem {
 
   @Id
@@ -20,6 +22,7 @@ public class CarritoItem {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name="carrito_id", nullable=false)
   @JsonIgnore
+  @com.fasterxml.jackson.annotation.JsonBackReference
   private Carrito carrito;
 
   @Column(name="pelicula_id", nullable=false)

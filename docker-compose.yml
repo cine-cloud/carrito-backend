@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   gateway:
     image: hmunoz79/apigateway:1.5
@@ -15,15 +17,27 @@ services:
 
   carritos-app:
     build: .
+    container_name: carritos-app-container
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    ports: ["8081:8081"]
+    ports:
+      - "8081:8081"
     environment:
       SERVER_PORT: 8081
+
+      # Configuración base de datos
       SPRING_DATASOURCE_URL: jdbc:postgresql://carritos-db:5432/carritos_db
       SPRING_DATASOURCE_USERNAME: user_carritos
       SPRING_DATASOURCE_PASSWORD: pass_carritos
+
+      # Servicio de películas (para peticiones REST)
       PELICULAS_BASE_URL: http://host.docker.internal:8080
+
+      # Configuración RabbitMQ (se conecta al de Películas)
+      SPRING_RABBITMQ_HOST: host.docker.internal
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       - carritos-db
 
@@ -39,3 +53,4 @@ services:
 
 volumes:
   carritos-data:
+

@@ -2,34 +2,50 @@ package com.unrn.services;
 
 import com.unrn.model.*;
 import com.unrn.repository.*;
-import com.unrn.services.Externo.*;
+import com.unrn.dto.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
+
+import java.math.BigDecimal;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class CarritoServicio {
 
   private final CarritoRepositorio repo;
-  private final ClientePeliculas clientePeliculas;
+  private final RestTemplate restTemplate;
+  private final String peliculasBaseUrl;
 
-  public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas) {
-    this.repo = repo; 
-    this.clientePeliculas = clientePeliculas;
+  public CarritoServicio(CarritoRepositorio repo, 
+                        @Value("${peliculas.base-url}") String peliculasBaseUrl) {
+    this.repo = repo;
+    this.restTemplate = new RestTemplate();
+    this.peliculasBaseUrl = peliculasBaseUrl;
   }
 
-  public Carrito crear(String usuarioId) {
+  public CarritoDTO crear(String usuarioId) {
     Carrito c = new Carrito();
     c.setUsuarioId(usuarioId);
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
-  public Carrito agregarItem(String carritoId, Integer peliculaId, int cantidad) {
+  public CarritoDTO agregarItem(String carritoId, Integer peliculaId, int cantidad) {
     Carrito c = obtener(carritoId);
     asegurarEditable(c);
 
-    var p = clientePeliculas.obtenerPorId(peliculaId);
+    // Obtener información de la película desde el microservicio
+    var resp = restTemplate.getForEntity(peliculasBaseUrl + "/api/peliculas/{id}", 
+        PeliculaResponse.class, peliculaId);
+    
+    if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
+      throw new IllegalStateException("No se pudo obtener Película " + peliculaId);
+    }
+    
+    var p = resp.getBody();
 
     CarritoItem item = new CarritoItem();
     item.setPeliculaId(p.peliculaId());
@@ -38,32 +54,35 @@ public class CarritoServicio {
     item.setCantidad(cantidad);
     c.agregarItem(item);
 
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
+  
+  private record PeliculaResponse(Integer peliculaId, String titulo, BigDecimal precio) {}
 
-  public Carrito actualizarCantidad(String carritoId, Integer peliculaId, int cantidad) {
+  public CarritoDTO actualizarCantidad(String carritoId, Integer peliculaId, int cantidad) {
     Carrito c = obtener(carritoId);
     asegurarEditable(c);
     c.actualizarCantidad(peliculaId, cantidad);
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
-  public Carrito eliminarItem(String carritoId, Integer peliculaId) {
+  public CarritoDTO eliminarItem(String carritoId, Integer peliculaId) {
     Carrito c = obtener(carritoId);
     asegurarEditable(c);
     c.eliminarItem(peliculaId);
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
-  public Carrito checkout(String carritoId) {
+  public CarritoDTO checkout(String carritoId) {
     Carrito c = obtener(carritoId);
     if (c.getItems().isEmpty()) throw new IllegalStateException("Carrito vacío");
     c.setEstado(CarritoEstado.CONFIRMADO);
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
   public Carrito obtener(String idCarrito) {
-    return repo.findById(idCarrito).orElseThrow();
+    return repo.findById(idCarrito)
+        .orElseThrow(() -> new IllegalArgumentException("Carrito no encontrado con ID: " + idCarrito));
   }
 
   public void eliminar(String carritoId) {
@@ -74,27 +93,47 @@ public class CarritoServicio {
     repo.delete(c);
   }
 
-  public Carrito vaciar(String carritoId) {
+  public CarritoDTO vaciar(String carritoId) {
     Carrito c = obtener(carritoId);
     asegurarEditable(c);
     c.getItems().clear();
     c.recalcular();
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
-  public Carrito cancelar(String carritoId) {
+  public CarritoDTO cancelar(String carritoId) {
     Carrito c = obtener(carritoId);
     c.setEstado(CarritoEstado.CANCELADO);
-    return repo.save(c);
+    return toDTO(repo.save(c));
   }
 
-  public java.util.List<Carrito> listarPorUsuario(String usuarioId) {
-    return repo.findByUsuarioId(usuarioId);
+  public java.util.List<CarritoDTO> listarPorUsuario(String usuarioId) {
+    return repo.findByUsuarioId(usuarioId).stream()
+        .map(this::toDTO)
+        .collect(Collectors.toList());
   }
 
   private void asegurarEditable(Carrito c) {
     if (c.getEstado() != CarritoEstado.ABIERTO)
       throw new IllegalStateException("El carrito no es editable en estado " + c.getEstado());
+  }
+
+  public CarritoDTO toDTO(Carrito c) {
+    return new CarritoDTO(
+        c.getId(),
+        c.getUsuarioId(),
+        c.getEstado(),
+        c.getTotal(),
+        c.getItems().stream()
+            .map(item -> new CarritoItemDTO(
+                item.getId(),
+                item.getPeliculaId(),
+                item.getTituloSnapshot(),
+                item.getPrecioUnitario(),
+                item.getCantidad()
+            ))
+            .collect(Collectors.toList())
+    );
   }
 }
 

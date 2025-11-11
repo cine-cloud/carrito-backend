@@ -1,5 +1,6 @@
 package com.unrn.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Carrito {
 
   @Id
@@ -32,6 +34,7 @@ public class Carrito {
   private BigDecimal total = BigDecimal.ZERO;
 
   @OneToMany(mappedBy="carrito", cascade=CascadeType.ALL, orphanRemoval=true, fetch=FetchType.EAGER)
+  @com.fasterxml.jackson.annotation.JsonManagedReference
   private List<CarritoItem> items = new ArrayList<>();
 
   public void agregarItem(CarritoItem item) {
@@ -48,6 +51,15 @@ public class Carrito {
   public void actualizarCantidad(Integer peliculaId, int cantidad) {
     items.stream().filter(i -> i.getPeliculaId().equals(peliculaId)).findFirst()
       .ifPresent(i -> { i.setCantidad(cantidad); recalcular(); });
+  }
+
+  public void actualizarPrecio(Integer peliculaId, BigDecimal nuevoPrecio) {
+    items.stream().filter(i -> i.getPeliculaId().equals(peliculaId)).findFirst()
+      .ifPresent(i -> { i.setPrecioUnitario(nuevoPrecio); recalcular(); });
+  }
+
+  public boolean contienePelicula(Integer peliculaId) {
+    return items.stream().anyMatch(i -> i.getPeliculaId().equals(peliculaId));
   }
 
   public void recalcular() {
