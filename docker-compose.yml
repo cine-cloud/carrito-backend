@@ -30,8 +30,10 @@ services:
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
-      # Nombre de la cola de eventos (debe coincidir con application.properties)
-      RABBITMQ_EVENT_CONSUMER_QUEUE_NAME: carritos.event.queue
+      # Topología de eventos (debe coincidir con application.properties)
+      RABBITMQ_EVENT_EXCHANGE_NAME: pelicula_exchange
+      RABBITMQ_EVENT_CONSUMER_QUEUE_NAME: carrito_pelicula_queue
+      RABBITMQ_EVENT_MOVIE_ROUTING_KEY: pelicula.evento
     depends_on:
       - carritos-db
       - rabbitmq
