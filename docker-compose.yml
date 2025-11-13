@@ -24,8 +24,17 @@ services:
       SPRING_DATASOURCE_USERNAME: user_carritos
       SPRING_DATASOURCE_PASSWORD: pass_carritos
       PELICULAS_BASE_URL: http://host.docker.internal:8080
+      
+      # Configuración RabbitMQ
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      # Nombre de la cola de eventos (debe coincidir con application.properties)
+      RABBITMQ_EVENT_CONSUMER_QUEUE_NAME: carritos.event.queue
     depends_on:
       - carritos-db
+      - rabbitmq
 
   carritos-db:
     image: postgres:13-alpine
@@ -37,5 +46,18 @@ services:
     volumes:
       - carritos-data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-container
+    ports:
+      - "5672:5672"   # puerto de conexión
+      - "15672:15672" # interfaz web de RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
   carritos-data:
+  rabbitmq_data:

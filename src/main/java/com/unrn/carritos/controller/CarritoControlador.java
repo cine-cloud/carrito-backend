@@ -1,8 +1,9 @@
-package com.unrn.controller;
+package com.unrn.carritos.controller;
 
-import com.unrn.controller.DTO.*;
-import com.unrn.model.Carrito;
-import com.unrn.services.CarritoServicio;
+import com.unrn.carritos.DTO.*;
+import com.unrn.carritos.model.Carrito;
+import com.unrn.carritos.service.CarritoServicio;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,10 @@ import java.util.List;
 public class CarritoControlador {
 
   private final CarritoServicio servicio;
-  public CarritoControlador(CarritoServicio servicio) { this.servicio = servicio; }
+
+  public CarritoControlador(CarritoServicio servicio) {
+    this.servicio = servicio;
+  }
 
   // Crear carrito
   @PostMapping("/{usuarioId}")
@@ -80,6 +84,5 @@ public class CarritoControlador {
   public Carrito cancelarCarrito(@PathVariable String idCarrito) {
     return servicio.cancelar(idCarrito);
   }
- 
-}
 
+}

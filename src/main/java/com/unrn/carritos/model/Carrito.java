@@ -1,4 +1,4 @@
-package com.unrn.model;
+package com.unrn.carritos.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,17 +21,17 @@ public class Carrito {
   @Column(name = "carrito_id", length = 36)
   private String id = UUID.randomUUID().toString();
 
-  @Column(name="usuario_id", nullable=false)
+  @Column(name = "usuario_id", nullable = false)
   private String usuarioId;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable=false)
+  @Column(nullable = false)
   private CarritoEstado estado = CarritoEstado.ABIERTO;
 
-  @Column(nullable=false, precision=12, scale=2)
+  @Column(nullable = false, precision = 12, scale = 2)
   private BigDecimal total = BigDecimal.ZERO;
 
-  @OneToMany(mappedBy="carrito", cascade=CascadeType.ALL, orphanRemoval=true, fetch=FetchType.EAGER)
+  @OneToMany(mappedBy = "carrito", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
   private List<CarritoItem> items = new ArrayList<>();
 
   public void agregarItem(CarritoItem item) {
@@ -47,12 +47,15 @@ public class Carrito {
 
   public void actualizarCantidad(Integer peliculaId, int cantidad) {
     items.stream().filter(i -> i.getPeliculaId().equals(peliculaId)).findFirst()
-      .ifPresent(i -> { i.setCantidad(cantidad); recalcular(); });
+        .ifPresent(i -> {
+          i.setCantidad(cantidad);
+          recalcular();
+        });
   }
 
   public void recalcular() {
     total = items.stream()
-      .map(i -> i.getPrecioUnitario().multiply(new BigDecimal(i.getCantidad())))
-      .reduce(BigDecimal.ZERO, BigDecimal::add);
+        .map(i -> i.getPrecioUnitario().multiply(new BigDecimal(i.getCantidad())))
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }

@@ -1,8 +1,8 @@
-package com.unrn.services;
+package com.unrn.carritos.service;
 
-import com.unrn.model.*;
-import com.unrn.repository.*;
-import com.unrn.services.Externo.*;
+import com.unrn.carritos.model.*;
+import com.unrn.carritos.repository.*;
+import com.unrn.carritos.service.Externo.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ public class CarritoServicio {
   private final ClientePeliculas clientePeliculas;
 
   public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas) {
-    this.repo = repo; 
+    this.repo = repo;
     this.clientePeliculas = clientePeliculas;
   }
 
@@ -57,7 +57,8 @@ public class CarritoServicio {
 
   public Carrito checkout(String carritoId) {
     Carrito c = obtener(carritoId);
-    if (c.getItems().isEmpty()) throw new IllegalStateException("Carrito vacío");
+    if (c.getItems().isEmpty())
+      throw new IllegalStateException("Carrito vacío");
     c.setEstado(CarritoEstado.CONFIRMADO);
     return repo.save(c);
   }
@@ -97,4 +98,3 @@ public class CarritoServicio {
       throw new IllegalStateException("El carrito no es editable en estado " + c.getEstado());
   }
 }
-
