@@ -3,15 +3,26 @@ version: '3.8'
 services:
   gateway:
     image: hmunoz79/apigateway:1.5
+    container_name: carrito-gateway
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
       - "9500:9500"
     environment:
       SPRING_SERVER_PORT: 9500
-      SPRING_CLOUD_GATEWAY_ROUTES[0]_URI: http://carritos-app:8081
+
+      # ==== RUTA API PRINCIPAL ====
       SPRING_CLOUD_GATEWAY_ROUTES[0]_ID: carrito-service
+      SPRING_CLOUD_GATEWAY_ROUTES[0]_URI: http://carritos-app:8081
       SPRING_CLOUD_GATEWAY_ROUTES[0]_PREDICATES[0]: Path=/carritos/**
+      SPRING_CLOUD_GATEWAY_ROUTES[0]_FILTERS[0]: StripPrefix=1
+
+      # ==== RUTAS PARA SWAGGER ====
+      SPRING_CLOUD_GATEWAY_ROUTES[1]_ID: carrito-swagger
+      SPRING_CLOUD_GATEWAY_ROUTES[1]_URI: http://carritos-app:8081
+      SPRING_CLOUD_GATEWAY_ROUTES[1]_PREDICATES[0]: Path=/carritos/swagger-ui/**,/carritos/v3/api-docs/**
+      SPRING_CLOUD_GATEWAY_ROUTES[1]_FILTERS[0]: StripPrefix=1
+
     depends_on:
       - carritos-app
 
@@ -24,20 +35,21 @@ services:
       - "8081:8081"
     environment:
       SERVER_PORT: 8081
+      SERVER_SERVLET_CONTEXT_PATH: /carritos
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      
+      # Servicio de Películas (REST)
+      PELICULAS_BASE_URL: http://host.docker.internal:8080
 
-      # Configuración base de datos
+      # Configuración de base de datos
       SPRING_DATASOURCE_URL: jdbc:postgresql://carritos-db:5432/carritos_db
       SPRING_DATASOURCE_USERNAME: user_carritos
       SPRING_DATASOURCE_PASSWORD: pass_carritos
 
-      # Servicio de películas (para peticiones REST)
-      PELICULAS_BASE_URL: http://host.docker.internal:8080
+      # Configuración de Swagger (opcional, los defaults ya sirven)
+      SPRINGDOC_API_DOCS_PATH: /v3/api-docs
+      SPRINGDOC_SWAGGER_UI_PATH: /swagger-ui/index.html
 
-      # Configuración RabbitMQ (se conecta al de Películas)
-      SPRING_RABBITMQ_HOST: host.docker.internal
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       - carritos-db
 
@@ -53,4 +65,3 @@ services:
 
 volumes:
   carritos-data:
-
