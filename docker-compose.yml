@@ -43,6 +43,8 @@ services:
       POSTGRES_DB: carritos_db
       POSTGRES_USER: user_carritos
       POSTGRES_PASSWORD: pass_carritos
+    ports:
+      - "5433:5432"
     volumes:
       - carritos-data:/var/lib/postgresql/data
 
