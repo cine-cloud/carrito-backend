@@ -13,12 +13,12 @@ public class CarritoControlador {
   private final CarritoServicio servicio;
   public CarritoControlador(CarritoServicio servicio) { this.servicio = servicio; }
 
-  @PostMapping("/crear-carrito/{usuarioId}")
+  @PostMapping("/{usuarioId}")
   public Carrito crearCarrito(@PathVariable String usuarioId) {
     return servicio.crear(usuarioId);
   }
 
-  @GetMapping("/obtener-carrito/{idCarrito}")
+  @GetMapping("/{idCarrito}")
   public Carrito obtenerCarrito(@PathVariable String idCarrito) 
     { return servicio.obtener(idCarrito); }
 
