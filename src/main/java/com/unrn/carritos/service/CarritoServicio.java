@@ -2,7 +2,7 @@ package com.unrn.carritos.service;
 
 import com.unrn.carritos.model.*;
 import com.unrn.carritos.repository.*;
-import com.unrn.carritos.service.Externo.*;
+import com.unrn.carritos.domain.Pelicula;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 public class CarritoServicio {
 
   private final CarritoRepositorio repo;
-  private final ClientePeliculas clientePeliculas;
+  private final PeliculaRepository peliculaRepository;
 
-  public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas) {
+  public CarritoServicio(CarritoRepositorio repo, PeliculaRepository peliculaRepository) {
     this.repo = repo;
-    this.clientePeliculas = clientePeliculas;
+    this.peliculaRepository = peliculaRepository;
   }
 
   public Carrito crear(String usuarioId) {
@@ -29,12 +29,14 @@ public class CarritoServicio {
     Carrito c = obtener(carritoId);
     asegurarEditable(c);
 
-    var p = clientePeliculas.obtenerPorId(peliculaId);
+    // Obtener película desde la BD local (sincronizada vía RabbitMQ)
+    Pelicula p = peliculaRepository.findById(String.valueOf(peliculaId))
+        .orElseThrow(() -> new IllegalStateException("Película con ID " + peliculaId + " no encontrada. Asegúrate de que la película exista en el servicio de películas y que RabbitMQ esté sincronizando los datos."));
 
     CarritoItem item = new CarritoItem();
-    item.setPeliculaId(p.peliculaId());
-    item.setTituloSnapshot(p.titulo());
-    item.setPrecioUnitario(p.precio());
+    item.setPeliculaId(peliculaId);
+    item.setTituloSnapshot(p.getTitulo());
+    item.setPrecioUnitario(p.getPrecio());
     item.setCantidad(cantidad);
     c.agregarItem(item);
 

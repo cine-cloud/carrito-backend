@@ -43,6 +43,7 @@ services:
     container_name: carritos-db-container
     environment:
       POSTGRES_DB: carritos_db
+      
       POSTGRES_USER: user_carritos
       POSTGRES_PASSWORD: pass_carritos
     ports:
