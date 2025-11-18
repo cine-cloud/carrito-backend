@@ -31,4 +31,14 @@ public class CarritoController {
     return servicio.agregarItem(idCarrito, dto.peliculaId(), dto.cantidad());
   }
 
+  @DeleteMapping("/{idCarrito}/items/{peliculaId}")
+  public Carrito eliminarItem(@PathVariable String idCarrito, @PathVariable Integer peliculaId) {
+    return servicio.eliminarItem(idCarrito, peliculaId);
+  }
+
+  @DeleteMapping("/{idCarrito}/items")
+  public Carrito vaciarCarrito(@PathVariable String idCarrito) {
+    return servicio.vaciar(idCarrito);
+  }
+
 }
