@@ -2,6 +2,9 @@ package com.unrn.carritos.event;
 
 import com.unrn.carritos.domain.Pelicula;
 import com.unrn.carritos.event.dto.Event;
+import com.unrn.carritos.model.Carrito;
+import com.unrn.carritos.repository.CarritoItemRepository;
+import com.unrn.carritos.repository.CarritoRepository;
 import com.unrn.carritos.repository.PeliculaRepository;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -17,15 +20,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import com.unrn.carritos.model.CarritoItem;
 
 @Service
 public class PeliculaEventListener {
 
     private final PeliculaRepository peliculaRepository;
+    private final CarritoItemRepository carritoItemRepository;
+    private final CarritoRepository carritoRepository;
 
     @Autowired
-    public PeliculaEventListener(PeliculaRepository peliculaRepository) {
+    public PeliculaEventListener(
+            PeliculaRepository peliculaRepository,
+            CarritoItemRepository carritoItemRepository,
+            CarritoRepository carritoRepository) {
         this.peliculaRepository = peliculaRepository;
+        this.carritoItemRepository = carritoItemRepository;
+        this.carritoRepository = carritoRepository;
     }
 
     @RabbitListener(queues = "${rabbitmq.event.consumer.queue.name}")
@@ -40,9 +53,45 @@ public class PeliculaEventListener {
         switch (event.getEventType()) {
 
             case CREATE:
+                Pelicula peliculaCreate = convertirMapAPelicula(event.getData(), event.getKey());
+                peliculaRepository.save(peliculaCreate);
+                break;
+
             case UPDATE:
                 Pelicula pelicula = convertirMapAPelicula(event.getData(), event.getKey());
                 peliculaRepository.save(pelicula);
+                
+                // Actualizar snapshots de items del carrito que tengan esta película
+                Integer peliculaId = Integer.parseInt(event.getKey());
+                List<CarritoItem> items = carritoItemRepository.findByPeliculaId(peliculaId);
+                
+                if (!items.isEmpty()) {
+                    // Obtener IDs únicos de carritos afectados antes de actualizar
+                    Set<String> carritoIds = items.stream()
+                        .map(item -> {
+                            // Forzar carga de la relación lazy
+                            Carrito carrito = item.getCarrito();
+                            return carrito != null ? carrito.getId() : null;
+                        })
+                        .filter(id -> id != null)
+                        .collect(Collectors.toSet());
+                    
+                    // Actualizar snapshots de todos los items
+                    for (CarritoItem item : items) {
+                        item.setTituloSnapshot(pelicula.getTitulo());
+                        item.setPrecioUnitario(pelicula.getPrecio());
+                    }
+                    carritoItemRepository.saveAll(items);
+                    
+                    // Recalcular totales de los carritos afectados
+                    for (String carritoId : carritoIds) {
+                        Carrito carrito = carritoRepository.findById(carritoId).orElse(null);
+                        if (carrito != null) {
+                            carrito.recalcular();
+                            carritoRepository.save(carrito);
+                        }
+                    }
+                }
                 break;
 
             case DELETE:
