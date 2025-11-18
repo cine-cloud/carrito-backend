@@ -1,17 +1,16 @@
-package com.unrn.carritos.controllercontroller;
-
+package com.unrn.carritos.controller;
 import com.unrn.carritos.DTO.*;
 import com.unrn.carritos.model.Carrito;
-import com.unrn.carritos.service.CarritoServicio;
+import com.unrn.carritos.service.CarritoService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/carritos")
-public class CarritoControlador {
+public class CarritoController {
 
-  private final CarritoServicio servicio;
-  public CarritoControlador(CarritoServicio servicio) { this.servicio = servicio; }
+  private final CarritoService servicio;
+  public CarritoController(CarritoService servicio) { this.servicio = servicio; }
 
   @PostMapping("/{usuarioId}")
   public Carrito crearCarrito(@PathVariable String usuarioId) {

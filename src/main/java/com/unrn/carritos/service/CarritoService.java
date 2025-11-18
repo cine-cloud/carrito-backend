@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class CarritoServicio {
+public class CarritoService {
 
-  private final CarritoRepositorio repo;
+  private final CarritoRepository repo;
   private final PeliculaRepository peliculaRepository;
 
-  public CarritoServicio(CarritoRepositorio repo, PeliculaRepository peliculaRepository) {
+  public CarritoService(CarritoRepository repo, PeliculaRepository peliculaRepository) {
     this.repo = repo;
     this.peliculaRepository = peliculaRepository;
   }

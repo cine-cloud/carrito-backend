@@ -7,6 +7,6 @@ import com.unrn.carritos.model.Carrito;
 
 import java.util.List;
 
-public interface CarritoRepositorio extends JpaRepository<Carrito, String> {
+public interface CarritoRepository extends JpaRepository<Carrito, String> {
   List<Carrito> findByUsuarioId(String usuarioId);
 }
