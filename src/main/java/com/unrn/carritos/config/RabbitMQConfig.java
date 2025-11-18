@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitMQConfig {
 
-   
     @Value("${rabbitmq.event.exchange.name}")
     private String eventExchange;
 
@@ -20,32 +19,27 @@ public class RabbitMQConfig {
     @Value("${rabbitmq.event.movie.routing.key}")
     private String routingKey;
 
-   
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-   
     @Bean
     public TopicExchange eventExchange() {
         return new TopicExchange(eventExchange);
     }
 
-   
     @Bean
     public Queue consumerQueue() {
-        
         return new Queue(queueName, true);
     }
 
-   
     @Bean
     public Binding binding(Queue consumerQueue, TopicExchange eventExchange) {
         return BindingBuilder
                 .bind(consumerQueue)
                 .to(eventExchange)
-                .with(routingKey);
+                .with(routingKey); // 🔄 película.event
     }
-
 }
+

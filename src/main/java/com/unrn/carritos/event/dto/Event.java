@@ -12,3 +12,4 @@ public class Event<K, T> {
     private K key;
     private T data;
 }
+

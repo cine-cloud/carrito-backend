@@ -46,7 +46,7 @@ Carrito declara automáticamente:
 
 - Exchange: `pelicula_exchange`
 - Queue: `carrito_pelicula_queue`
-- Routing key: `pelicula.evento`
+- Routing key: `pelicula.event`
 
 ---
 

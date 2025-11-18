@@ -33,7 +33,7 @@ services:
       # Topología de eventos (debe coincidir con application.properties)
       RABBITMQ_EVENT_EXCHANGE_NAME: pelicula_exchange
       RABBITMQ_EVENT_CONSUMER_QUEUE_NAME: carrito_pelicula_queue
-      RABBITMQ_EVENT_MOVIE_ROUTING_KEY: pelicula.evento
+      RABBITMQ_EVENT_MOVIE_ROUTING_KEY: pelicula.event
     depends_on:
       - carritos-db
       - rabbitmq

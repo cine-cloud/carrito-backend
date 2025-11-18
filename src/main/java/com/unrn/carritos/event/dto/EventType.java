@@ -5,3 +5,4 @@ public enum EventType {
     UPDATE,
     DELETE
 }
+
