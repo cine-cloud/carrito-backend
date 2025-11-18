@@ -14,8 +14,12 @@ CREATE TABLE IF NOT EXISTS carrito_items (
   item_id VARCHAR(36) PRIMARY KEY,
   carrito_id VARCHAR(36) NOT NULL REFERENCES carritos(carrito_id) ON DELETE CASCADE,
   pelicula_id INTEGER NOT NULL,
-  titulo_snapshot VARCHAR(255) NOT NULL,
+  titulo VARCHAR(255) NOT NULL,
   precio_unitario NUMERIC(12,2) NOT NULL,
+  sinopsis TEXT,
+  imagen_ampliada VARCHAR(255),
+  condicion VARCHAR(50) NOT NULL,
+  formato VARCHAR(50) NOT NULL,
   cantidad INTEGER NOT NULL
 );
 

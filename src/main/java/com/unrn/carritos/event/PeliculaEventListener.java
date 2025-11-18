@@ -18,11 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.unrn.carritos.model.CarritoItem;
+import com.unrn.carritos.model.CarritoEstado;
 
 @Service
 public class PeliculaEventListener {
@@ -44,9 +47,9 @@ public class PeliculaEventListener {
     @RabbitListener(queues = "${rabbitmq.event.consumer.queue.name}")
     @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 5000))
     @Transactional
-    public void handleMovieEvent(Event<String, Map<String, Object>> event) {
+    public void handleMovieEvent(Event<Integer, Map<String, Object>> event) {
 
-        if (event.getKey() == null || event.getKey().isEmpty()) {
+        if (event.getKey() == null) {
             throw new IllegalArgumentException("El key (peliculaId) no puede ser null");
         }
 
@@ -62,33 +65,42 @@ public class PeliculaEventListener {
                 peliculaRepository.save(pelicula);
                 
                 // Actualizar snapshots de items del carrito que tengan esta película
-                Integer peliculaId = Integer.parseInt(event.getKey());
+                Integer peliculaId = event.getKey();
                 List<CarritoItem> items = carritoItemRepository.findByPeliculaId(peliculaId);
                 
                 if (!items.isEmpty()) {
-                    // Obtener IDs únicos de carritos afectados antes de actualizar
-                    Set<String> carritoIds = items.stream()
-                        .map(item -> {
-                            // Forzar carga de la relación lazy
-                            Carrito carrito = item.getCarrito();
-                            return carrito != null ? carrito.getId() : null;
-                        })
-                        .filter(id -> id != null)
-                        .collect(Collectors.toSet());
+                    // Filtrar items que pertenecen a carritos ABIERTOS (solo estos se actualizan)
+                    List<CarritoItem> itemsAbiertos = new ArrayList<>();
+                    Set<String> carritoIdsAbiertos = new HashSet<>();
                     
-                    // Actualizar snapshots de todos los items
                     for (CarritoItem item : items) {
-                        item.setTituloSnapshot(pelicula.getTitulo());
-                        item.setPrecioUnitario(pelicula.getPrecio());
+                        // Forzar carga de la relación lazy
+                        Carrito carrito = item.getCarrito();
+                        if (carrito != null && carrito.getEstado() == CarritoEstado.ABIERTO) {
+                            itemsAbiertos.add(item);
+                            carritoIdsAbiertos.add(carrito.getId());
+                        }
                     }
-                    carritoItemRepository.saveAll(items);
                     
-                    // Recalcular totales de los carritos afectados
-                    for (String carritoId : carritoIds) {
-                        Carrito carrito = carritoRepository.findById(carritoId).orElse(null);
-                        if (carrito != null) {
-                            carrito.recalcular();
-                            carritoRepository.save(carrito);
+                    // Actualizar snapshots solo de items en carritos ABIERTOS
+                    if (!itemsAbiertos.isEmpty()) {
+                        for (CarritoItem item : itemsAbiertos) {
+                            item.setTituloSnapshot(pelicula.getTitulo());
+                            item.setPrecioUnitario(pelicula.getPrecio());
+                            item.setSinopsisSnapshot(pelicula.getSinopsis());
+                            item.setImagenAmpliadaSnapshot(pelicula.getImagenAmpliada());
+                            item.setCondicionSnapshot(pelicula.getCondicion());
+                            item.setFormatoSnapshot(pelicula.getFormato());
+                        }
+                        carritoItemRepository.saveAll(itemsAbiertos);
+                        
+                        // Recalcular totales solo de los carritos ABIERTOS afectados
+                        for (String carritoId : carritoIdsAbiertos) {
+                            Carrito carrito = carritoRepository.findById(carritoId).orElse(null);
+                            if (carrito != null) {
+                                carrito.recalcular();
+                                carritoRepository.save(carrito);
+                            }
                         }
                     }
                 }
@@ -104,7 +116,7 @@ public class PeliculaEventListener {
         }
     }
 
-    private Pelicula convertirMapAPelicula(Map<String, Object> data, String peliculaId) {
+    private Pelicula convertirMapAPelicula(Map<String, Object> data, Integer peliculaId) {
 
         if (data == null) {
             throw new IllegalArgumentException("El objeto data del evento no puede ser null");

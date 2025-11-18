@@ -13,12 +13,13 @@ import java.time.LocalDateTime;
 @Table(name = "peliculas")
 public class Pelicula {
     @Id
-    private String peliculaId; // Cambiado a String para que coincida con event.getKey()
+    @Column(name = "pelicula_id", nullable = false)
+    private Integer peliculaId;
 
     @Column(nullable = false, length = 255)
     private String titulo;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_salida", nullable = false)
     private LocalDate fechaSalida;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -33,10 +34,10 @@ public class Pelicula {
     @Column(columnDefinition = "TEXT")
     private String sinopsis;
 
-    @Column(length = 255)
+    @Column(name = "imagen_ampliada", length = 255)
     private String imagenAmpliada;
 
-    @Column(nullable = false)
+    @Column(name = "last_update", nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
 }

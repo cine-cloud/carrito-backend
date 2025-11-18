@@ -1,6 +1,7 @@
 package com.unrn.carritos.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,11 +29,28 @@ public class CarritoItem {
   @Column(name = "pelicula_id", nullable = false)
   private Integer peliculaId;
 
-  @Column(name = "titulo_snapshot", nullable = false, length = 255)
+  @Column(name = "titulo", nullable = false, length = 255)
+  @JsonProperty("titulo")
   private String tituloSnapshot;
 
   @Column(name = "precio_unitario", nullable = false, precision = 12, scale = 2)
   private BigDecimal precioUnitario;
+
+  @Column(name = "sinopsis", columnDefinition = "TEXT")
+  @JsonProperty("sinopsis")
+  private String sinopsisSnapshot;
+
+  @Column(name = "imagen_ampliada", length = 255)
+  @JsonProperty("imagenAmpliada")
+  private String imagenAmpliadaSnapshot;
+
+  @Column(name = "condicion", nullable = false, length = 50)
+  @JsonProperty("condicion")
+  private String condicionSnapshot;
+
+  @Column(name = "formato", nullable = false, length = 50)
+  @JsonProperty("formato")
+  private String formatoSnapshot;
 
   @Column(nullable = false)
   private int cantidad;

@@ -19,8 +19,8 @@ y lo ejecutará contra la BD `carritos_db`.
 param(
     [string]$PeliculaA = 'Inception',
     [string]$PeliculaB = 'The Dark Knight',
-    [string]$User1 = 'user_test_1',
-    [string]$User2 = 'user_test_2'
+    [string]$User1 = 'user1',
+    [string]$User2 = 'user2'
 )
 
 Set-StrictMode -Version Latest
