@@ -34,12 +34,28 @@ public class CarritoService {
         .orElseThrow(() -> new IllegalStateException("Película con ID " + peliculaId
             + " no encontrada. Asegúrate de que la película exista en el servicio de películas y que RabbitMQ esté sincronizando los datos."));
 
-    CarritoItem item = new CarritoItem();
-    item.setPeliculaId(peliculaId);
-    item.setTituloSnapshot(p.getTitulo());
-    item.setPrecioUnitario(p.getPrecio());
-    item.setCantidad(cantidad);
-    c.agregarItem(item);
+    // Verificar si ya existe un item con el mismo peliculaId en el carrito
+    CarritoItem itemExistente = c.getItems().stream()
+        .filter(i -> i.getPeliculaId().equals(peliculaId))
+        .findFirst()
+        .orElse(null);
+
+    if (itemExistente != null) {
+      // Si ya existe, actualizar la cantidad sumando la nueva cantidad
+      itemExistente.setCantidad(itemExistente.getCantidad() + cantidad);
+      // Actualizar el snapshot del título y precio por si han cambiado
+      itemExistente.setTituloSnapshot(p.getTitulo());
+      itemExistente.setPrecioUnitario(p.getPrecio());
+      c.recalcular();
+    } else {
+      // Si no existe, crear un nuevo item
+      CarritoItem item = new CarritoItem();
+      item.setPeliculaId(peliculaId);
+      item.setTituloSnapshot(p.getTitulo());
+      item.setPrecioUnitario(p.getPrecio());
+      item.setCantidad(cantidad);
+      c.agregarItem(item);
+    }
 
     return repo.save(c);
   }
