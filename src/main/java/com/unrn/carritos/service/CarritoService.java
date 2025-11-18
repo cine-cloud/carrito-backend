@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class CarritoServicio {
+public class CarritoService {
 
-  private final CarritoRepositorio repo;
+  private final CarritoRepository repo;
   private final PeliculaRepository peliculaRepository;
 
-  public CarritoServicio(CarritoRepositorio repo, PeliculaRepository peliculaRepository) {
+  public CarritoService(CarritoRepository repo, PeliculaRepository peliculaRepository) {
     this.repo = repo;
     this.peliculaRepository = peliculaRepository;
   }
@@ -31,7 +31,8 @@ public class CarritoServicio {
 
     // Obtener película desde la BD local (sincronizada vía RabbitMQ)
     Pelicula p = peliculaRepository.findById(String.valueOf(peliculaId))
-        .orElseThrow(() -> new IllegalStateException("Película con ID " + peliculaId + " no encontrada. Asegúrate de que la película exista en el servicio de películas y que RabbitMQ esté sincronizando los datos."));
+        .orElseThrow(() -> new IllegalStateException("Película con ID " + peliculaId
+            + " no encontrada. Asegúrate de que la película exista en el servicio de películas y que RabbitMQ esté sincronizando los datos."));
 
     CarritoItem item = new CarritoItem();
     item.setPeliculaId(peliculaId);
