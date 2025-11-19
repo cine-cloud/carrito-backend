@@ -13,6 +13,26 @@ services:
       SPRING_CLOUD_GATEWAY_ROUTES[1]_URI: http://host.docker.internal:8080
       SPRING_CLOUD_GATEWAY_ROUTES[1]_ID: peliculas-service
       SPRING_CLOUD_GATEWAY_ROUTES[1]_PREDICATES[0]: Path=/api/**
+      SPRING_CLOUD_GATEWAY_ROUTES[1]_FILTERS[0]: StripPrefix=1
+      SPRING_APPLICATION_JSON: >-
+        {
+          "spring": {
+            "cloud": {
+              "gateway": {
+                "globalcors": {
+                  "corsConfigurations": {
+                    "[/**]": {
+                      "allowedOrigins": ["http://localhost:3000"],
+                      "allowedMethods": ["GET","POST","PUT","DELETE","OPTIONS"],
+                      "allowedHeaders": ["*"],
+                      "allowCredentials": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
     depends_on:
       - carritos-app
 
