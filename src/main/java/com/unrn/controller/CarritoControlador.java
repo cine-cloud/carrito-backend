@@ -1,6 +1,6 @@
 package com.unrn.controller;
 
-import com.unrn.controller.DTO.*;
+import com.unrn.DTO.*;
 import com.unrn.model.Carrito;
 import com.unrn.services.CarritoServicio;
 import jakarta.validation.Valid;
@@ -8,10 +8,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/carritos")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CarritoControlador {
 
-  private final CarritoServicio servicio;
-  public CarritoControlador(CarritoServicio servicio) { this.servicio = servicio; }
+    private final CarritoServicio servicio;
+
+    public CarritoControlador(CarritoServicio servicio) {
+        this.servicio = servicio;
+    }
 
   @PostMapping("/{usuarioId}")
   public Carrito crearCarrito(@PathVariable String usuarioId) {
@@ -26,6 +30,20 @@ public class CarritoControlador {
   public Carrito agregarItemCarrito(@PathVariable String idCarrito, @Valid @RequestBody AgregarItemDTO dto) {
     return servicio.agregarItem(idCarrito, dto.peliculaId(), dto.cantidad());
   }
+
+  @PostMapping("/checkout/{idCarrito}")
+  public Carrito checkout(@PathVariable String idCarrito) {
+    return servicio.checkout(idCarrito);
+  }
  
+@DeleteMapping("/eliminar-item/{idCarrito}")
+public Carrito eliminarItem(@PathVariable String idCarrito, @Valid @RequestBody EliminarItemDTO dto) {
+    return servicio.eliminarItem(idCarrito, dto.peliculaId());
+}
+
+@PutMapping("/actualizar-cantidad/{idCarrito}")
+public Carrito actualizarCantidad(@PathVariable String idCarrito, @Valid @RequestBody ActualizarCantidadDTO dto) {
+    return servicio.actualizarCantidad(idCarrito, dto.peliculaId(), dto.cantidad());
+}
 }
 

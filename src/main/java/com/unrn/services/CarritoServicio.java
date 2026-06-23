@@ -1,5 +1,8 @@
 package com.unrn.services;
 
+import com.unrn.event.CompraEventPublisher;
+import com.unrn.event.dto.CompraEventDTO;
+import com.unrn.event.dto.ItemCompraEventDTO;
 import com.unrn.model.*;
 import com.unrn.repository.*;
 import com.unrn.services.Externo.*;
@@ -7,68 +10,138 @@ import com.unrn.services.Externo.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @Transactional
 public class CarritoServicio {
 
-  private final CarritoRepositorio repo;
-  private final ClientePeliculas clientePeliculas;
+    private final CarritoRepositorio repo;
+    private final ClientePeliculas clientePeliculas;
+    private final CompraEventPublisher compraEventPublisher;
 
-  public CarritoServicio(CarritoRepositorio repo, ClientePeliculas clientePeliculas) {
-    this.repo = repo; 
-    this.clientePeliculas = clientePeliculas;
-  }
+    public CarritoServicio(
+            CarritoRepositorio repo,
+            ClientePeliculas clientePeliculas,
+            CompraEventPublisher compraEventPublisher) {
 
-  public Carrito crear(String usuarioId) {
-    Carrito c = new Carrito();
-    c.setUsuarioId(usuarioId);
-    return repo.save(c);
-  }
+        this.repo = repo;
+        this.clientePeliculas = clientePeliculas;
+        this.compraEventPublisher = compraEventPublisher;
+    }
 
-  public Carrito agregarItem(String carritoId, Integer peliculaId, int cantidad) {
-    Carrito c = obtener(carritoId);
-    asegurarEditable(c);
+    public Carrito crear(String usuarioId) {
+        Carrito c = new Carrito();
+        c.setUsuarioId(usuarioId);
+        return repo.save(c);
+    }
 
-    var p = clientePeliculas.obtenerPorId(peliculaId);
+    public Carrito agregarItem(String carritoId, Integer peliculaId, int cantidad) {
 
-    CarritoItem item = new CarritoItem();
-    item.setPeliculaId(p.peliculaId());
-    item.setTituloSnapshot(p.titulo());
-    item.setPrecioUnitario(p.precio());
-    item.setCantidad(cantidad);
-    c.agregarItem(item);
+        Carrito c = obtener(carritoId);
+        asegurarEditable(c);
 
-    return repo.save(c);
-  }
+        var p = clientePeliculas.obtenerPorId(peliculaId);
 
-  public Carrito actualizarCantidad(String carritoId, Integer peliculaId, int cantidad) {
-    Carrito c = obtener(carritoId);
-    asegurarEditable(c);
-    c.actualizarCantidad(peliculaId, cantidad);
-    return repo.save(c);
-  }
+        CarritoItem item = new CarritoItem();
+        item.setPeliculaId(p.peliculaId());
+        item.setTituloSnapshot(p.titulo());
+        item.setPrecioUnitario(p.precio());
+        item.setCantidad(cantidad);
 
-  public Carrito eliminarItem(String carritoId, Integer peliculaId) {
-    Carrito c = obtener(carritoId);
-    asegurarEditable(c);
-    c.eliminarItem(peliculaId);
-    return repo.save(c);
-  }
+        c.agregarItem(item);
 
-  public Carrito checkout(String carritoId) {
-    Carrito c = obtener(carritoId);
-    if (c.getItems().isEmpty()) throw new IllegalStateException("Carrito vacío");
-    c.setEstado(CarritoEstado.CONFIRMADO);
-    return repo.save(c);
-  }
+        return repo.save(c);
+    }
 
-  public Carrito obtener(String idCarrito) {
-    return repo.findById(idCarrito).orElseThrow();
-  }
+    public Carrito actualizarCantidad(
+            String carritoId,
+            Integer peliculaId,
+            int cantidad) {
 
-  private void asegurarEditable(Carrito c) {
-    if (c.getEstado() != CarritoEstado.ABIERTO)
-      throw new IllegalStateException("El carrito no es editable en estado " + c.getEstado());
-  }
+        Carrito c = obtener(carritoId);
+
+        asegurarEditable(c);
+
+        c.actualizarCantidad(peliculaId, cantidad);
+
+        return repo.save(c);
+    }
+
+    public Carrito eliminarItem(
+            String carritoId,
+            Integer peliculaId) {
+
+        Carrito c = obtener(carritoId);
+
+        asegurarEditable(c);
+
+        c.eliminarItem(peliculaId);
+
+        return repo.save(c);
+    }
+
+    public Carrito checkout(String carritoId) {
+
+        Carrito c = obtener(carritoId);
+
+        if (c.getItems().isEmpty()) {
+            throw new IllegalStateException("Carrito vacío");
+        }
+
+        CompraEventDTO evento = new CompraEventDTO();
+
+        evento.setUsuarioId(c.getUsuarioId());
+
+       
+// evento.setFechaTransaccion(
+//         LocalDateTime.now().toString()
+// );
+
+        evento.setTotal(c.getTotal());
+
+        evento.setItems(
+                c.getItems()
+                        .stream()
+                        .map(item -> {
+
+                            ItemCompraEventDTO dto =
+                                    new ItemCompraEventDTO();
+
+                            dto.setPeliculaId(item.getPeliculaId());
+                            dto.setTituloSnapshot(item.getTituloSnapshot());
+                            dto.setPrecioUnitario(item.getPrecioUnitario());
+                            dto.setCantidad(item.getCantidad());
+
+                            return dto;
+                        })
+                        .toList()
+        );
+
+        try {
+            compraEventPublisher.enviarEvento(evento);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+
+        c.setEstado(CarritoEstado.CONFIRMADO);
+
+        return repo.save(c);
+        
+    }
+
+    public Carrito obtener(String idCarrito) {
+        return repo.findById(idCarrito).orElseThrow();
+    }
+
+    private void asegurarEditable(Carrito c) {
+
+        if (c.getEstado() != CarritoEstado.ABIERTO) {
+            throw new IllegalStateException(
+                    "El carrito no es editable en estado "
+                            + c.getEstado()
+            );
+        }
+    }
 }
-

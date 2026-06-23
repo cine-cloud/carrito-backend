@@ -1,4 +1,4 @@
-package com.unrn.controller.DTO;
+package com.unrn.DTO;
 
 import jakarta.validation.constraints.*;
 
