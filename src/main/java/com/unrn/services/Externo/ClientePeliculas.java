@@ -22,7 +22,12 @@ public class ClientePeliculas {
       throw new IllegalStateException("No se pudo obtener Película " + id);
     }
     return resp.getBody();
-  }
-
-  public record PeliculaRemota(Integer peliculaId, String titulo, BigDecimal precio) {}
+  }  
+    public record PeliculaRemota(
+        Integer peliculaId,
+        String titulo,
+        BigDecimal precio,
+        String imagenAmpliada
+) {}
+  
 }

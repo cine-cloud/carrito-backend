@@ -9,6 +9,8 @@ public class ItemCompraEventDTO {
 
     private Integer peliculaId;
 
+    private String imagenUrl;
+
     private String tituloSnapshot;
 
     private BigDecimal precioUnitario;

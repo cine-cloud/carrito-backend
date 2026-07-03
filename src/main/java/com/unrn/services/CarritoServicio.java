@@ -10,7 +10,7 @@ import com.unrn.services.Externo.*;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -36,6 +36,22 @@ public class CarritoServicio {
         return repo.save(c);
     }
 
+    public Carrito obtenerCarritoAbierto(String usuarioId) {
+
+        return repo.findByUsuarioIdAndEstado(
+                usuarioId,
+                CarritoEstado.ABIERTO).orElseGet(() -> {
+
+                    Carrito carrito = new Carrito();
+
+                    carrito.setUsuarioId(usuarioId);
+
+                    return repo.save(carrito);
+
+                });
+
+    }
+
     public Carrito agregarItem(String carritoId, Integer peliculaId, int cantidad) {
 
         Carrito c = obtener(carritoId);
@@ -46,6 +62,7 @@ public class CarritoServicio {
         CarritoItem item = new CarritoItem();
         item.setPeliculaId(p.peliculaId());
         item.setTituloSnapshot(p.titulo());
+        item.setImagenUrl(p.imagenAmpliada());
         item.setPrecioUnitario(p.precio());
         item.setCantidad(cantidad);
 
@@ -93,11 +110,6 @@ public class CarritoServicio {
 
         evento.setUsuarioId(c.getUsuarioId());
 
-       
-// evento.setFechaTransaccion(
-//         LocalDateTime.now().toString()
-// );
-
         evento.setTotal(c.getTotal());
 
         evento.setItems(
@@ -105,18 +117,17 @@ public class CarritoServicio {
                         .stream()
                         .map(item -> {
 
-                            ItemCompraEventDTO dto =
-                                    new ItemCompraEventDTO();
+                            ItemCompraEventDTO dto = new ItemCompraEventDTO();
 
                             dto.setPeliculaId(item.getPeliculaId());
                             dto.setTituloSnapshot(item.getTituloSnapshot());
+                            dto.setImagenUrl(item.getImagenUrl());
                             dto.setPrecioUnitario(item.getPrecioUnitario());
                             dto.setCantidad(item.getCantidad());
 
                             return dto;
                         })
-                        .toList()
-        );
+                        .toList());
 
         try {
             compraEventPublisher.enviarEvento(evento);
@@ -128,7 +139,49 @@ public class CarritoServicio {
         c.setEstado(CarritoEstado.CONFIRMADO);
 
         return repo.save(c);
-        
+
+    }
+
+    public Carrito asociarUsuario(String carritoId, String usuarioId) {
+
+        Carrito carrito = obtener(carritoId);
+
+        carrito.setUsuarioId(usuarioId);
+
+        return repo.save(carrito);
+    }
+
+    public Carrito asociarOFusionar(String carritoAnonimoId, String usuarioId) {
+
+        Carrito carritoAnonimo = obtener(carritoAnonimoId);
+
+        Optional<Carrito> carritoUsuarioOpt = repo.findByUsuarioIdAndEstado(usuarioId, CarritoEstado.ABIERTO);
+
+        if (carritoUsuarioOpt.isEmpty()) {
+
+            carritoAnonimo.setUsuarioId(usuarioId);
+
+            return repo.save(carritoAnonimo);
+        }
+
+        Carrito carritoUsuario = carritoUsuarioOpt.get();
+
+        for (CarritoItem itemAnonimo : carritoAnonimo.getItems()) {
+
+            CarritoItem nuevoItem = new CarritoItem();
+
+            nuevoItem.setPeliculaId(itemAnonimo.getPeliculaId());
+            nuevoItem.setTituloSnapshot(itemAnonimo.getTituloSnapshot());
+            nuevoItem.setImagenUrl(itemAnonimo.getImagenUrl());
+            nuevoItem.setPrecioUnitario(itemAnonimo.getPrecioUnitario());
+            nuevoItem.setCantidad(itemAnonimo.getCantidad());
+
+            carritoUsuario.agregarItem(nuevoItem);
+        }
+
+        repo.delete(carritoAnonimo);
+
+        return repo.save(carritoUsuario);
     }
 
     public Carrito obtener(String idCarrito) {
@@ -138,10 +191,7 @@ public class CarritoServicio {
     private void asegurarEditable(Carrito c) {
 
         if (c.getEstado() != CarritoEstado.ABIERTO) {
-            throw new IllegalStateException(
-                    "El carrito no es editable en estado "
-                            + c.getEstado()
-            );
+            throw new IllegalStateException("El carrito no es editable en estado " + c.getEstado());
         }
     }
 }

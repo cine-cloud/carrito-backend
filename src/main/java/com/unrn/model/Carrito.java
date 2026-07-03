@@ -21,7 +21,7 @@ public class Carrito {
   @Column(name = "carrito_id", length = 36)
   private String id = UUID.randomUUID().toString();
 
-  @Column(name="usuario_id", nullable=false)
+  @Column(name="usuario_id")
   private String usuarioId;
 
   @Enumerated(EnumType.STRING)
@@ -35,8 +35,24 @@ public class Carrito {
   private List<CarritoItem> items = new ArrayList<>();
 
   public void agregarItem(CarritoItem item) {
-    items.add(item);
-    item.setCarrito(this);
+
+    CarritoItem existente = items.stream()
+            .filter(i -> i.getPeliculaId().equals(item.getPeliculaId()))
+            .findFirst()
+            .orElse(null);
+
+    if (existente != null) {
+
+        existente.setCantidad(
+                existente.getCantidad() + item.getCantidad()
+        );
+
+    } else {
+
+        item.setCarrito(this);
+        items.add(item);
+    }
+
     recalcular();
   }
 
