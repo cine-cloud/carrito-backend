@@ -47,8 +47,6 @@
       <scope>runtime</scope>
     </dependency>
 
-    
-
     <!-- Base de datos H2 solo para pruebas -->
     <dependency>
       <groupId>com.h2database</groupId>
@@ -137,6 +135,45 @@
           </annotationProcessorPaths>
         </configuration>
       </plugin>
+
+      <!-- JaCoCo -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+
+                <executions>
+
+                    <!-- Instrumenta el código antes de ejecutar los tests -->
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+
+                    <!-- Genera el reporte -->
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+
+                         <configuration>
+                
+                          <excludes>                   
+                            <!-- DTOs -->                    
+                            <exclude>com/unrn/event/dto/**</exclude>                
+                          </excludes>
+            
+                        </configuration>
+
+                    </execution>
+                    
+                </executions>
+
+            </plugin>
     </plugins>
   </build>
 </project>

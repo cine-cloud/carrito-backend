@@ -9,12 +9,16 @@ import java.math.BigDecimal;
 @Component
 public class ClientePeliculas {
 
-  private final RestTemplate rest = new RestTemplate();
-  private final String baseUrl;
+    private final RestTemplate rest;
+    private final String baseUrl;
 
-  public ClientePeliculas(@Value("${peliculas.base-url}") String baseUrl) {
-    this.baseUrl = baseUrl;
-  }
+    public ClientePeliculas(
+            RestTemplate rest,
+            @Value("${peliculas.base-url}") String baseUrl) {
+
+        this.rest = rest;
+        this.baseUrl = baseUrl;
+    }
 
   public PeliculaRemota obtenerPorId(Integer id) {
     var resp = rest.getForEntity(baseUrl + "/peliculas/{id}", PeliculaRemota.class, id);
