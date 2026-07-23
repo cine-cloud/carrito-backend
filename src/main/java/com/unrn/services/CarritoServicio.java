@@ -98,7 +98,7 @@ public class CarritoServicio {
         return repo.save(c);
     }
 
-    public Carrito checkout(String carritoId) {
+    public Carrito checkout(String carritoId, java.math.BigDecimal descuentoMonto) {
 
         Carrito c = obtener(carritoId);
 
@@ -110,7 +110,16 @@ public class CarritoServicio {
 
         evento.setUsuarioId(c.getUsuarioId());
 
-        evento.setTotal(c.getTotal());
+        java.math.BigDecimal total = c.getTotal();
+        if (descuentoMonto != null) {
+            total = total.subtract(descuentoMonto);
+            if (total.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                total = java.math.BigDecimal.ZERO;
+            }
+            c.setTotal(total);
+        }
+
+        evento.setTotal(total);
 
         evento.setItems(
                 c.getItems()

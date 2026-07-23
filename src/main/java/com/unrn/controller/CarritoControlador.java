@@ -49,8 +49,10 @@ public class CarritoControlador {
   }
 
   @PostMapping("/checkout/{idCarrito}")
-  public Carrito checkout(@PathVariable String idCarrito) {
-    return servicio.checkout(idCarrito);
+  public Carrito checkout(
+      @PathVariable String idCarrito,
+      @RequestParam(required = false) java.math.BigDecimal descuentoMonto) {
+    return servicio.checkout(idCarrito, descuentoMonto);
   }
 
   @DeleteMapping("/eliminar-item/{idCarrito}")
