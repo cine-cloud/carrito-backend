@@ -9,6 +9,9 @@ import com.unrn.services.Externo.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.Optional;
 
@@ -110,6 +113,32 @@ public class CarritoServicio {
 
         evento.setUsuarioId(c.getUsuarioId());
 
+        // Recuperar información del usuario autenticado vía JWT
+        String email = "cliente@ejemplo.com";
+        String nombre = "Cliente";
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getPrincipal() instanceof Jwt) {
+                Jwt jwt = (Jwt) auth.getPrincipal();
+                email = jwt.getClaimAsString("email");
+                if (email == null) {
+                    email = jwt.getClaimAsString("preferred_username") + "@mail.com";
+                }
+                nombre = jwt.getClaimAsString("name");
+                if (nombre == null) {
+                    nombre = jwt.getClaimAsString("preferred_username");
+                }
+            }
+        } catch (Exception ex) {
+            // Ignorar y usar fallbacks
+        }
+
+        String transactionId = java.util.UUID.randomUUID().toString();
+        evento.setIdCompra(transactionId);
+        evento.setFecha(java.time.LocalDateTime.now());
+        evento.setEmailCliente(email);
+        evento.setNombreCliente(nombre);
+
         java.math.BigDecimal total = c.getTotal();
         if (descuentoMonto != null) {
             total = total.subtract(descuentoMonto);
@@ -138,6 +167,21 @@ public class CarritoServicio {
                         })
                         .toList());
 
+        evento.setProductos(
+                c.getItems()
+                        .stream()
+                        .map(item -> {
+                            CompraEventDTO.ProductoDTO prod = new CompraEventDTO.ProductoDTO();
+                            prod.setIdProducto(String.valueOf(item.getPeliculaId()));
+                            prod.setNombre(item.getTituloSnapshot());
+                            prod.setCantidad(item.getCantidad());
+                            prod.setPrecioUnitario(item.getPrecioUnitario());
+                            prod.setSubtotal(item.getPrecioUnitario().multiply(new java.math.BigDecimal(item.getCantidad())));
+                            return prod;
+                        })
+                        .toList()
+        );
+
         try {
             compraEventPublisher.enviarEvento(evento);
         } catch (Exception e) {
@@ -149,6 +193,10 @@ public class CarritoServicio {
 
         return repo.save(c);
 
+    }
+
+    public Carrito checkout(String carritoId) {
+        return checkout(carritoId, null);
     }
 
     public Carrito asociarUsuario(String carritoId, String usuarioId) {

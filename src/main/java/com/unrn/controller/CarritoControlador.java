@@ -52,7 +52,10 @@ public class CarritoControlador {
   public Carrito checkout(
       @PathVariable String idCarrito,
       @RequestParam(required = false) java.math.BigDecimal descuentoMonto) {
-    return servicio.checkout(idCarrito, descuentoMonto);
+    if (descuentoMonto != null) {
+      return servicio.checkout(idCarrito, descuentoMonto);
+    }
+    return servicio.checkout(idCarrito);
   }
 
   @DeleteMapping("/eliminar-item/{idCarrito}")
