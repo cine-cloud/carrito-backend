@@ -9,10 +9,15 @@ import java.math.BigDecimal;
 @Component
 public class ClientePeliculas {
 
-  private final RestTemplate rest = new RestTemplate();
+  private final RestTemplate rest;
   private final String baseUrl;
 
   public ClientePeliculas(@Value("${peliculas.base-url}") String baseUrl) {
+    this(new RestTemplate(), baseUrl);
+  }
+
+  public ClientePeliculas(RestTemplate rest, String baseUrl) {
+    this.rest = rest;
     this.baseUrl = baseUrl;
   }
 
