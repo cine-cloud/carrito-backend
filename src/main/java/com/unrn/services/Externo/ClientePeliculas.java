@@ -39,15 +39,29 @@ public class ClientePeliculas {
     }
 
     public void descontarStock(DescuentoStockRequest request) {
+        try {
+            HttpEntity<DescuentoStockRequest> entity =
+                    new HttpEntity<>(request);
 
-        HttpEntity<DescuentoStockRequest> entity =
-                new HttpEntity<>(request);
-
-        rest.exchange(
-                baseUrl + "/peliculas/descontar-stock",
-                HttpMethod.PUT,
-                entity,
-                Void.class);
+            rest.exchange(
+                    baseUrl + "/peliculas/descontar-stock",
+                    HttpMethod.PUT,
+                    entity,
+                    Void.class);
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            String errorMessage = "Stock insuficiente para realizar la compra";
+            try {
+                com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(e.getResponseBodyAsString());
+                if (root.has("message") && !root.get("message").asText().isBlank()) {
+                    errorMessage = root.get("message").asText();
+                }
+            } catch (Exception parseEx) {
+                if (e.getResponseBodyAsString() != null && !e.getResponseBodyAsString().isBlank()) {
+                    errorMessage = e.getResponseBodyAsString();
+                }
+            }
+            throw new org.springframework.web.server.ResponseStatusException(e.getStatusCode(), errorMessage);
+        }
     }
 
     public record PeliculaRemota(
