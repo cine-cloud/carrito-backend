@@ -34,6 +34,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+
 @SpringBootTest(classes = CarritoApplication.class)
 @AutoConfigureMockMvc(addFilters = false)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -52,6 +54,9 @@ class CarritoControllerIntegrationTest {
 
     @MockBean
     private CompraEventPublisher compraEventPublisher;
+
+    @MockBean
+    private JwtDecoder jwtDecoder;
 
     @BeforeEach
     void configurarMocks() {

@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+
 @SpringBootTest(classes = CarritoApplication.class)
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -38,6 +40,9 @@ class CarritoServicioIntegrationTest {
 
     @MockBean
     private ClientePeliculas clientePeliculas;
+
+    @MockBean
+    private JwtDecoder jwtDecoder;
 
     @MockBean
     private CompraEventPublisher compraEventPublisher;

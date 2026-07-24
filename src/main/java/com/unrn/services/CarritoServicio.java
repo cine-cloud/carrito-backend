@@ -222,7 +222,15 @@ public class CarritoServicio {
 
         Carrito carritoAnonimo = obtener(carritoAnonimoId);
 
+        if (carritoAnonimo.getUsuarioId() != null && carritoAnonimo.getUsuarioId().equals(usuarioId)) {
+            return carritoAnonimo;
+        }
+
         Optional<Carrito> carritoUsuarioOpt = repo.findByUsuarioIdAndEstado(usuarioId, CarritoEstado.ABIERTO);
+
+        if (carritoUsuarioOpt.isPresent() && carritoUsuarioOpt.get().getId().equals(carritoAnonimoId)) {
+            return carritoAnonimo;
+        }
 
         if (carritoUsuarioOpt.isEmpty()) {
 
