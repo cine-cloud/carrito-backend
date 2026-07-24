@@ -109,6 +109,17 @@ public class CarritoServicio {
             throw new IllegalStateException("Carrito vacío");
         }
 
+        ClientePeliculas.DescuentoStockRequest request = new ClientePeliculas.DescuentoStockRequest(
+
+                c.getItems()
+                        .stream()
+                        .map(item -> new ClientePeliculas.DescuentoStockDTO(
+                                item.getPeliculaId(),
+                                item.getCantidad()))
+                        .toList());
+
+        clientePeliculas.descontarStock(request);
+
         CompraEventDTO evento = new CompraEventDTO();
 
         evento.setUsuarioId(c.getUsuarioId());
@@ -192,7 +203,6 @@ public class CarritoServicio {
         c.setEstado(CarritoEstado.CONFIRMADO);
 
         return repo.save(c);
-
     }
 
     public Carrito checkout(String carritoId) {
