@@ -15,6 +15,7 @@ public class ClientePeliculas {
     private final RestTemplate rest;
     private final String baseUrl;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public ClientePeliculas(@Value("${peliculas.base-url}") String baseUrl) {
         this(new RestTemplate(), baseUrl);
     }
