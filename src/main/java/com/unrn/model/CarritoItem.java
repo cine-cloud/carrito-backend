@@ -28,6 +28,9 @@ public class CarritoItem {
   @Column(name="titulo_snapshot", nullable=false, length=255)
   private String tituloSnapshot;
 
+  @Column(name = "imagen_url")
+  private String imagenUrl;
+
   @Column(name="precio_unitario", nullable=false, precision=12, scale=2)
   private BigDecimal precioUnitario;
 

@@ -1,55 +1,126 @@
 package com.unrn.services.Externo;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
+@ExtendWith(MockitoExtension.class)
 class ClientePeliculasTest {
 
-    @Test
-    @DisplayName("PeliculaRemota record getters y constructor")
-    void testPeliculaRemota() {
-        ClientePeliculas.PeliculaRemota p = new ClientePeliculas.PeliculaRemota(1, "Test", new BigDecimal("50.00"));
-        assertEquals(1, p.peliculaId());
-        assertEquals("Test", p.titulo());
-        assertEquals(new BigDecimal("50.00"), p.precio());
+    @Mock
+    private RestTemplate restTemplate;
+
+    private ClientePeliculas clientePeliculas;
+
+    private static final String BASE_URL = "http://localhost:8080";
+
+    @BeforeEach
+    void setUp() {
+        clientePeliculas = new ClientePeliculas(restTemplate, BASE_URL);
     }
 
     @Test
-    @DisplayName("obtenerPorId exitoso")
-    void testObtenerPorIdExitoso() {
-        RestTemplate mockRest = mock(RestTemplate.class);
-        ClientePeliculas.PeliculaRemota mockPeli = new ClientePeliculas.PeliculaRemota(10, "Peli 10", new BigDecimal("99.99"));
+    void deberiaObtenerPeliculaPorId() {
 
-        when(mockRest.getForEntity(anyString(), eq(ClientePeliculas.PeliculaRemota.class), eq(10)))
-                .thenReturn(new ResponseEntity<>(mockPeli, HttpStatus.OK));
+        ClientePeliculas.PeliculaRemota pelicula =
+                new ClientePeliculas.PeliculaRemota(
+                        1,
+                        "Matrix",
+                        new BigDecimal("2500"),
+                        "imagen.jpg");
 
-        ClientePeliculas cliente = new ClientePeliculas(mockRest, "http://localhost:8080");
-        ClientePeliculas.PeliculaRemota result = cliente.obtenerPorId(10);
+        when(restTemplate.getForEntity(
+                eq(BASE_URL + "/peliculas/{id}"),
+                eq(ClientePeliculas.PeliculaRemota.class),
+                eq(1)))
+                .thenReturn(ResponseEntity.ok(pelicula));
 
-        assertNotNull(result);
-        assertEquals(10, result.peliculaId());
-        assertEquals("Peli 10", result.titulo());
+        ClientePeliculas.PeliculaRemota resultado =
+                clientePeliculas.obtenerPorId(1);
+
+        assertEquals(1, resultado.peliculaId());
+        assertEquals("Matrix", resultado.titulo());
+        assertEquals(
+                0,
+                new BigDecimal("2500").compareTo(resultado.precio()));
+        assertEquals("imagen.jpg", resultado.imagenAmpliada());
+
+        verify(restTemplate).getForEntity(
+                BASE_URL + "/peliculas/{id}",
+                ClientePeliculas.PeliculaRemota.class,
+                1);
     }
 
     @Test
-    @DisplayName("obtenerPorId respuesta fallida lanza IllegalStateException")
-    void testObtenerPorIdFallidoLanzaExcepcion() {
-        RestTemplate mockRest = mock(RestTemplate.class);
+    void deberiaLanzarExcepcionCuandoBodyEsNull() {
 
-        when(mockRest.getForEntity(anyString(), eq(ClientePeliculas.PeliculaRemota.class), eq(99)))
-                .thenReturn(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+        ResponseEntity<ClientePeliculas.PeliculaRemota> response =
+                new ResponseEntity<>(null, HttpStatus.OK);
 
-        ClientePeliculas cliente = new ClientePeliculas(mockRest, "http://localhost:8080");
+        when(restTemplate.getForEntity(
+                eq(BASE_URL + "/peliculas/{id}"),
+                eq(ClientePeliculas.PeliculaRemota.class),
+                eq(5)))
+                .thenReturn(response);
 
-        assertThrows(IllegalStateException.class, () -> cliente.obtenerPorId(99));
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> clientePeliculas.obtenerPorId(5));
+
+        assertEquals(
+                "No se pudo obtener Película 5",
+                ex.getMessage());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionCuandoRespuestaNoEsExitosa() {
+
+        ResponseEntity<ClientePeliculas.PeliculaRemota> response =
+                new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
+        when(restTemplate.getForEntity(
+                eq(BASE_URL + "/peliculas/{id}"),
+                eq(ClientePeliculas.PeliculaRemota.class),
+                eq(9)))
+                .thenReturn(response);
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> clientePeliculas.obtenerPorId(9));
+
+        assertEquals(
+                "No se pudo obtener Película 9",
+                ex.getMessage());
+    }
+
+    @Test
+    void deberiaPropagarExcepcionDelRestTemplate() {
+
+        when(restTemplate.getForEntity(
+                eq(BASE_URL + "/peliculas/{id}"),
+                eq(ClientePeliculas.PeliculaRemota.class),
+                eq(3)))
+                .thenThrow(new RestClientException("Error de conexión"));
+
+        RestClientException ex = assertThrows(
+                RestClientException.class,
+                () -> clientePeliculas.obtenerPorId(3));
+
+        assertEquals("Error de conexión", ex.getMessage());
+>>>>>>> feature/carrito-rabbit-ABMC
     }
 }
