@@ -1,7 +1,7 @@
 package com.unrn.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.unrn.controller.DTO.AgregarItemDTO;
+import com.unrn.DTO.AgregarItemDTO;
 import com.unrn.model.Carrito;
 import com.unrn.model.CarritoEstado;
 import com.unrn.services.CarritoServicio;
@@ -19,7 +19,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CarritoControlador.class)
+@WebMvcTest(controllers = CarritoControlador.class, excludeAutoConfiguration = {
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class
+})
 class CarritoControladorTest {
 
     @Autowired

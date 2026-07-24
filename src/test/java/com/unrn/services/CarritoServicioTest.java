@@ -599,6 +599,4 @@ class CarritoServicioTest {
 
                 verify(repo).save(any(Carrito.class));
         }
-
->>>>>>> feature/carrito-rabbit-ABMC
 }

@@ -121,6 +121,5 @@ class ClientePeliculasTest {
                 () -> clientePeliculas.obtenerPorId(3));
 
         assertEquals("Error de conexión", ex.getMessage());
->>>>>>> feature/carrito-rabbit-ABMC
     }
 }

@@ -1,6 +1,6 @@
 package com.unrn.model;
 
-import com.unrn.controller.DTO.ActualizarCantidadDTO;
+import com.unrn.DTO.ActualizarCantidadDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +41,7 @@ class CarritoTest {
     @Test
     @DisplayName("Probando DTO ActualizarCantidadDTO")
     void testActualizarCantidadDTO() {
-        ActualizarCantidadDTO dto = new ActualizarCantidadDTO(5);
+        ActualizarCantidadDTO dto = new ActualizarCantidadDTO(1, 5);
         assertEquals(5, dto.cantidad());
     }
 }
