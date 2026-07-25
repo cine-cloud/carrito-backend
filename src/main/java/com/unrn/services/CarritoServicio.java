@@ -150,15 +150,20 @@ public class CarritoServicio {
         evento.setEmailCliente(email);
         evento.setNombreCliente(nombre);
 
-        java.math.BigDecimal total = c.getTotal();
+        java.math.BigDecimal subtotal = c.getTotal();
+        java.math.BigDecimal total = subtotal;
+        java.math.BigDecimal descMonto = descuentoMonto != null ? descuentoMonto : java.math.BigDecimal.ZERO;
+
         if (descuentoMonto != null) {
-            total = total.subtract(descuentoMonto);
+            total = subtotal.subtract(descuentoMonto);
             if (total.compareTo(java.math.BigDecimal.ZERO) < 0) {
                 total = java.math.BigDecimal.ZERO;
             }
             c.setTotal(total);
         }
 
+        evento.setSubtotal(subtotal);
+        evento.setDescuentoMonto(descMonto);
         evento.setTotal(total);
 
         evento.setItems(

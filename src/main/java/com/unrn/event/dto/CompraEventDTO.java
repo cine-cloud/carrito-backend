@@ -10,6 +10,8 @@ public class CompraEventDTO {
 
     private String usuarioId;
     private String fechaTransaccion;
+    private BigDecimal subtotal;
+    private BigDecimal descuentoMonto;
     private BigDecimal total;
     private List<ItemCompraEventDTO> items;
 
