@@ -51,7 +51,7 @@ public class ClientePeliculas {
                     entity,
                     Void.class);
         } catch (org.springframework.web.client.HttpStatusCodeException e) {
-            String errorMessage = "Stock insuficiente para realizar la compra";
+            String errorMessage = "Error al verificar stock de películas";
             try {
                 com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper().readTree(e.getResponseBodyAsString());
                 if (root.has("message") && !root.get("message").asText().isBlank()) {
