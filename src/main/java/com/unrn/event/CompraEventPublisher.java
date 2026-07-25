@@ -13,7 +13,7 @@ public class CompraEventPublisher {
 
     public CompraEventPublisher(
             RabbitTemplate rabbitTemplate,
-            @Value("${rabbitmq.event.exchange.name}") String exchangeName) {
+            @Value("${rabbitmq.event.compra.exchange.name:compra.exchange}") String exchangeName) {
 
         this.rabbitTemplate = rabbitTemplate;
         this.exchangeName = exchangeName;

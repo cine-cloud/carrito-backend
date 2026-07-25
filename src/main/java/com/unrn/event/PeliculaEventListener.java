@@ -23,7 +23,7 @@ public class PeliculaEventListener {
         this.objectMapper = objectMapper;
     }
 
-    @RabbitListener(queues = "${rabbitmq.event.consumer.queue.name}")
+    @RabbitListener(queues = "${rabbitmq.event.movie.queue.name:carrito.pelicula.queue}")
     public void recibirEventoPelicula(Event<Integer, Object> evento) {
         if (evento == null || evento.getEventType() != EventType.UPDATE || evento.getData() == null) {
             return;

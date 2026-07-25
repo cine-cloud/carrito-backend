@@ -12,14 +12,17 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 @Configuration
 public class RabbitMQConfig {
 
-    @Value("${rabbitmq.event.exchange.name}")
-    private String eventExchange;
+    @Value("${rabbitmq.event.movie.exchange.name:pelicula_exchange}")
+    private String movieExchangeName;
 
-    @Value("${rabbitmq.event.consumer.queue.name}")
-    private String queueName;
+    @Value("${rabbitmq.event.movie.queue.name:carrito.pelicula.queue}")
+    private String movieQueueName;
 
-    @Value("${rabbitmq.event.movie.routing.key}")
-    private String routingKey;
+    @Value("${rabbitmq.event.movie.routing.key:pelicula.event}")
+    private String movieRoutingKey;
+
+    @Value("${rabbitmq.event.compra.exchange.name:compra.exchange}")
+    private String compraExchangeName;
 
     @Bean
     public MessageConverter jsonMessageConverter(com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
@@ -28,47 +31,34 @@ public class RabbitMQConfig {
 
     @Bean
     public RabbitTemplate rabbitTemplate(
-        ConnectionFactory connectionFactory,
+            ConnectionFactory connectionFactory,
             MessageConverter jsonMessageConverter) {
 
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(jsonMessageConverter);
-
         return template;
     }
     
     @Bean
-    public TopicExchange eventExchange() {
-        return new TopicExchange(eventExchange);
+    public TopicExchange movieExchange() {
+        return new TopicExchange(movieExchangeName);
     }
 
     @Bean
-    public Queue consumerQueue() {
-        return new Queue(queueName, true);
+    public Queue movieQueue() {
+        return new Queue(movieQueueName, true);
     }
 
     @Bean
-    public Binding binding(Queue consumerQueue, TopicExchange eventExchange) {
+    public Binding movieBinding(Queue movieQueue, TopicExchange movieExchange) {
         return BindingBuilder
-                .bind(consumerQueue)
-                .to(eventExchange)
-                .with(routingKey); // 🔄 película.event
+                .bind(movieQueue)
+                .to(movieExchange)
+                .with(movieRoutingKey);
     }
 
     @Bean
-    public Queue precioQueue() {
-        return new Queue("carrito_precio_queue", true);
+    public TopicExchange compraExchange() {
+        return new TopicExchange(compraExchangeName);
     }
-
-    @Bean
-    public Binding precioBinding(
-        Queue precioQueue,
-        TopicExchange exchange) {
-
-        return BindingBuilder
-            .bind(precioQueue)
-            .to(exchange)
-            .with("pelicula.precio.actualizado");
-    }
-
 }
