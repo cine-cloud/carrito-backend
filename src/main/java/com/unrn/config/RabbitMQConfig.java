@@ -58,6 +58,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue precioQueue() {
+        return new Queue("carrito_precio_queue", true);
+    }
+
+    @Bean
     public TopicExchange compraExchange() {
         return new TopicExchange(compraExchangeName);
     }

@@ -101,7 +101,7 @@ public class CarritoServicio {
         return repo.save(c);
     }
 
-    public Carrito checkout(String carritoId, java.math.BigDecimal descuentoMonto) {
+    public Carrito checkout(String carritoId, java.math.BigDecimal descuentoMonto, String codigoDescuento) {
 
         Carrito c = obtener(carritoId);
 
@@ -164,6 +164,7 @@ public class CarritoServicio {
 
         evento.setSubtotal(subtotal);
         evento.setDescuentoMonto(descMonto);
+        evento.setCodigoDescuento(codigoDescuento);
         evento.setTotal(total);
 
         evento.setItems(
@@ -210,8 +211,12 @@ public class CarritoServicio {
         return repo.save(c);
     }
 
+    public Carrito checkout(String carritoId, java.math.BigDecimal descuentoMonto) {
+        return checkout(carritoId, descuentoMonto, null);
+    }
+
     public Carrito checkout(String carritoId) {
-        return checkout(carritoId, null);
+        return checkout(carritoId, null, null);
     }
 
     public Carrito asociarUsuario(String carritoId, String usuarioId) {
