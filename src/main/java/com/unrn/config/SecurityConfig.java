@@ -60,20 +60,15 @@ public class SecurityConfig {
                         .permitAll()
 
                         // Flujo anónimo
-                        .requestMatchers(HttpMethod.POST, "/carritos")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.GET, "/carritos/*")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.POST, "/carritos/agregar-item/*")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.PUT, "/carritos/actualizar-cantidad/*")
-                        .permitAll()
-
-                        .requestMatchers(HttpMethod.DELETE, "/carritos/eliminar-item/*")
-                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/carritos").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/carritos/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/carritos/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/carritos/agregar-item/*").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/carritos/actualizar-cantidad/*").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/carritos/eliminar-item/*").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/carritos/*/items").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/carritos/*/items/*").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/carritos/*/items/*").permitAll()
 
                         // Usuario autenticado
                         .requestMatchers(HttpMethod.GET, "/carritos/usuario/*")

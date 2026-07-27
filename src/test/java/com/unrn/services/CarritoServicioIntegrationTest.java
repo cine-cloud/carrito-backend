@@ -4,8 +4,9 @@ import com.unrn.CarritoApplication;
 import com.unrn.event.CompraEventPublisher;
 import com.unrn.model.Carrito;
 import com.unrn.repository.CarritoRepositorio;
-import com.unrn.services.Externo.ClientePeliculas;
-import com.unrn.services.Externo.ClientePeliculas.PeliculaRemota;
+import com.unrn.services.externo.ClientePeliculas;
+import com.unrn.services.port.ClientePeliculasPort.PeliculaRemota;
+import com.unrn.services.port.ClientePeliculasPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class CarritoServicioIntegrationTest {
     private CarritoRepositorio repositorio;
 
     @MockBean
-    private ClientePeliculas clientePeliculas;
+    private ClientePeliculasPort clientePeliculas;
 
     @MockBean
     private JwtDecoder jwtDecoder;
@@ -56,7 +57,8 @@ class CarritoServicioIntegrationTest {
                                 1,
                                 "Matrix",
                                 new BigDecimal("1000"),
-                                "imagen.jpg"
+                                "imagen.jpg",
+                                10
                         )
                 );
     }

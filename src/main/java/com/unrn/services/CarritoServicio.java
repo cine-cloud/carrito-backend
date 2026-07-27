@@ -5,7 +5,8 @@ import com.unrn.event.dto.CompraEventDTO;
 import com.unrn.event.dto.ItemCompraEventDTO;
 import com.unrn.model.*;
 import com.unrn.repository.*;
-import com.unrn.services.Externo.*;
+import com.unrn.services.externo.ClientePeliculas;
+import com.unrn.services.port.ClientePeliculasPort;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,12 @@ import java.util.Optional;
 public class CarritoServicio {
 
     private final CarritoRepositorio repo;
-    private final ClientePeliculas clientePeliculas;
+    private final ClientePeliculasPort clientePeliculas;
     private final CompraEventPublisher compraEventPublisher;
 
     public CarritoServicio(
             CarritoRepositorio repo,
-            ClientePeliculas clientePeliculas,
+            ClientePeliculasPort clientePeliculas,
             CompraEventPublisher compraEventPublisher) {
 
         this.repo = repo;
@@ -62,6 +63,10 @@ public class CarritoServicio {
 
         var p = clientePeliculas.obtenerPorId(peliculaId);
 
+        if (p != null && p.stock() != null && cantidad > p.stock()) {
+            throw new IllegalArgumentException("No hay stock suficiente \"" + p.titulo() + "\" para la compra.");
+        }
+
         CarritoItem item = new CarritoItem();
         item.setPeliculaId(p.peliculaId());
         item.setTituloSnapshot(p.titulo());
@@ -82,6 +87,13 @@ public class CarritoServicio {
         Carrito c = obtener(carritoId);
 
         asegurarEditable(c);
+
+        if (cantidad > 0) {
+            var p = clientePeliculas.obtenerPorId(peliculaId);
+            if (p != null && p.stock() != null && cantidad > p.stock()) {
+                throw new IllegalArgumentException("No hay stock suficiente \"" + p.titulo() + "\" para la compra.");
+            }
+        }
 
         c.actualizarCantidad(peliculaId, cantidad);
 
@@ -109,11 +121,11 @@ public class CarritoServicio {
             throw new IllegalStateException("Carrito vacío");
         }
 
-        ClientePeliculas.DescuentoStockRequest request = new ClientePeliculas.DescuentoStockRequest(
+        ClientePeliculasPort.DescuentoStockRequest request = new ClientePeliculasPort.DescuentoStockRequest(
 
                 c.getItems()
                         .stream()
-                        .map(item -> new ClientePeliculas.DescuentoStockDTO(
+                        .map(item -> new ClientePeliculasPort.DescuentoStockDTO(
                                 item.getPeliculaId(),
                                 item.getCantidad()))
                         .toList());
@@ -122,28 +134,37 @@ public class CarritoServicio {
 
         CompraEventDTO evento = new CompraEventDTO();
 
-        evento.setUsuarioId(c.getUsuarioId());
-
         // Recuperar información del usuario autenticado vía JWT
         String email = "cliente@ejemplo.com";
         String nombre = "Cliente";
+        String username = null;
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.getPrincipal() instanceof Jwt) {
                 Jwt jwt = (Jwt) auth.getPrincipal();
+                username = jwt.getClaimAsString("preferred_username");
+                if (username == null) {
+                    username = jwt.getSubject();
+                }
                 email = jwt.getClaimAsString("email");
-                if (email == null) {
-                    email = jwt.getClaimAsString("preferred_username") + "@mail.com";
+                if (email == null && username != null) {
+                    email = username + "@mail.com";
                 }
                 nombre = jwt.getClaimAsString("name");
                 if (nombre == null) {
-                    nombre = jwt.getClaimAsString("preferred_username");
+                    nombre = username != null ? username : "Cliente";
                 }
             }
         } catch (Exception ex) {
             // Ignorar y usar fallbacks
         }
 
+        if ((c.getUsuarioId() == null || c.getUsuarioId().isBlank()) && username != null) {
+            c.setUsuarioId(username);
+        }
+
+        String finalUsuarioId = c.getUsuarioId() != null && !c.getUsuarioId().isBlank() ? c.getUsuarioId() : (username != null ? username : nombre);
+        evento.setUsuarioId(finalUsuarioId);
         String transactionId = java.util.UUID.randomUUID().toString();
         evento.setIdCompra(transactionId);
         evento.setFecha(java.time.LocalDateTime.now());

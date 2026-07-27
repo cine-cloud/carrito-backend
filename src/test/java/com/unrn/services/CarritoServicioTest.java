@@ -6,7 +6,8 @@ import com.unrn.model.Carrito;
 import com.unrn.model.CarritoEstado;
 import com.unrn.model.CarritoItem;
 import com.unrn.repository.CarritoRepositorio;
-import com.unrn.services.Externo.ClientePeliculas;
+import com.unrn.services.externo.ClientePeliculas;
+import com.unrn.services.port.ClientePeliculasPort;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +30,7 @@ class CarritoServicioTest {
         private CarritoRepositorio repo;
 
         @Mock
-        private ClientePeliculas clientePeliculas;
+        private ClientePeliculasPort clientePeliculas;
 
         @Mock
         private CompraEventPublisher compraEventPublisher;
@@ -128,11 +129,12 @@ class CarritoServicioTest {
                 when(repo.findById(carritoId))
                                 .thenReturn(Optional.of(carrito));
 
-                ClientePeliculas.PeliculaRemota pelicula = new ClientePeliculas.PeliculaRemota(
+                ClientePeliculasPort.PeliculaRemota pelicula = new ClientePeliculasPort.PeliculaRemota(
                                 peliculaId,
                                 "Titanic",
                                 new BigDecimal("2500"),
-                                "imagen.jpg");
+                                "imagen.jpg",
+                                10);
 
                 when(clientePeliculas.obtenerPorId(peliculaId))
                                 .thenReturn(pelicula);
