@@ -63,7 +63,14 @@ public class CarritoServicio {
 
         var p = clientePeliculas.obtenerPorId(peliculaId);
 
-        if (p != null && p.stock() != null && cantidad > p.stock()) {
+        int cantidadExistente = c.getItems().stream()
+                .filter(i -> i.getPeliculaId().equals(peliculaId))
+                .mapToInt(CarritoItem::getCantidad)
+                .findFirst().orElse(0);
+
+        int cantidadTotalDeseada = cantidadExistente + cantidad;
+
+        if (p != null && p.stock() != null && cantidadTotalDeseada > p.stock()) {
             throw new IllegalArgumentException("No hay stock suficiente \"" + p.titulo() + "\" para la compra.");
         }
 
